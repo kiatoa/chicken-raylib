@@ -4,6 +4,9 @@ This is the official repository for the `raylib` egg! Refer to the egg's wiki fo
 https://wiki.call-cc.org/eggref/5/raylib
 
 ## Install
+Step 1: Install raylib https://github.com/raysan5/raylib 
+
+Step 2:
 ```chicken-install -sudo raylib```
 
 _NOTE: the egg is linked to raylib with the `-lraylib` link flag, so be sure the raylib library (static or dynamic) is available on your system._
