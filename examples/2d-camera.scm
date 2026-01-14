@@ -134,8 +134,7 @@
            (float->int (vec2-y (camera2d-target camera)))
            (float->int (* screen-width 10))
            (float->int (vec2-y (camera2d-target camera)))
-           GREEN)
-         ))
+           GREEN)))
 
      (draw-text "SCREEN AREA" 640 10 20 RED)
      (draw-text (number->string (get-fps)) 640 40 20 RED)
@@ -150,8 +149,7 @@
      (draw-text "- Right/Left to move player" 40 40 10 DARKGRAY)
      (draw-text "- Mouse Wheel to Zoom in-out" 40 60 10 RED)
      (draw-text "- A / S to Rotate" 40 80 10 DARKGRAY)
-     (draw-text "- R to reset Zoom and Rotation" 40 100 10 DARKGRAY)
-     ))
+     (draw-text "- R to reset Zoom and Rotation" 40 100 10 DARKGRAY)))
   (unless (window-should-close?) ;; Detect window close button or ESC key
     (loop)))
 
