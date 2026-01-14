@@ -116,19 +116,22 @@
   (with-drawing
    (lambda ()
      (clear-background RAYWHITE)
+
      (with-mode-2d 
        camera
        (lambda ()
          (draw-rectangle -6000 320 13000 8000 DARKGRAY)
+
          (for-each draw-rectangle-rec buildings build-colors)
+
          (draw-rectangle-rec player RED)
+
          (draw-line 
            (float->int (vec2-x (camera2d-target camera)))
            (float->int (* screen-height -10))
            (float->int (vec2-x (camera2d-target camera)))
            (float->int (* screen-height 10))
            GREEN)
-
          (draw-line
            (float->int (* screen-width -10))
            (float->int (vec2-y (camera2d-target camera)))
@@ -143,8 +146,10 @@
      (draw-rectangle 0 5 5 (- screen-height 10) RED)
      (draw-rectangle (- screen-width 5) 5 5 (- screen-height 10) RED)
      (draw-rectangle 0 (- screen-height 5) screen-width 5 RED)
+
      (draw-rectangle 10 10 250 113 (fade SKYBLUE 0.5))
      (draw-rectangle-lines 10 10 250 113 BLUE)
+
      (draw-text "Free 2D camera controls:" 20 20 10 BLACK)
      (draw-text "- Right/Left to move player" 40 40 10 DARKGRAY)
      (draw-text "- Mouse Wheel to Zoom in-out" 40 60 10 RED)
