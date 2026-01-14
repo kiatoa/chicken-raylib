@@ -11,6 +11,14 @@ Step 2:
 
 _NOTE: the egg searches for raylib using `pkg-config --libs raylib`, so be sure the raylib library (in its .so/.dll form) is available on your system._
 
+## Static build
+Static building isn't as automatic as the default dynamic build, but you can do it with:
+
+```
+csc -static myprogram.scm -L /usr/local/lib/libraylib.a
+```
+
+replacing, `/usr/local/lib/libraylib.a` with the path to your static raylib binary.
 ## Example
 ```scheme
 ;; examples/basic-window.scm
