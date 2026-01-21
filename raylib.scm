@@ -21,10 +21,12 @@ void FromVector3(float * x, Vector3 v) { x[0]=v.x; x[1]=v.y; x[2]=v.z; }
 (define-foreign-type Color u8vector)
 (define (make-color r g b a)
   (u8vector r g b a))
+(define (color r g b a) (make-color r g b a))
 
 (define-foreign-type Rectangle f32vector)
 (define (make-rect x y w h)
   (f32vector x y w h))
+(define (rectangle x y w h) (make-rect x y w h))
 (define (rect-x r) (f32vector-ref r 0))
 (define (rect-y r) (f32vector-ref r 1))
 (define (rect-w r) (f32vector-ref r 2))
@@ -33,12 +35,14 @@ void FromVector3(float * x, Vector3 v) { x[0]=v.x; x[1]=v.y; x[2]=v.z; }
 (define-foreign-type Vector2 f32vector)
 (define (make-vec2 x y)
   (f32vector x y))
+(define (vector2 x y) (make-vec2 x y))
 (define (vec2-x v) (f32vector-ref v 0))
 (define (vec2-y v) (f32vector-ref v 1))
 
 (define-foreign-type Vector3 f32vector)
 (define (make-vec3 x y z)
   (f32vector x y z))
+(define (vector3 x y z) (make-vec3 x y z))
 (define (vec3-x v) (f32vector-ref v 0))
 (define (vec3-y v) (f32vector-ref v 1))
 (define (vec3-z v) (f32vector-ref v 2))
@@ -305,6 +309,9 @@ void FromVector3(float * x, Vector3 v) { x[0]=v.x; x[1]=v.y; x[2]=v.z; }
 (define MOUSE_BUTTON_FORWARD 5) 
 (define MOUSE_BUTTON_BACK    6) 
 
+(define CAMERA_PERSPECTIVE 0)
+(define CAMERA_ORTHOGRAPHIC 1)
+
 ;; Window-related functions
 (define init-window (foreign-lambda void "InitWindow" int int c-string))
 (define close-window (foreign-lambda void "CloseWindow"))
@@ -437,6 +444,8 @@ void FromVector3(float * x, Vector3 v) { x[0]=v.x; x[1]=v.y; x[2]=v.z; }
   (foreign-lambda* void ((Texture* texture) (Rectangle source) (Rectangle dest) (Vector2 origin) (float rotation) (Color tint)) 
                    "DrawTexturePro(*texture, ToRectangle(source), ToRectangle(dest), ToVector2(origin), rotation, ToColor(tint));"))
 
+(define draw-fps (foreign-lambda void "DrawFPS" int int))
+
 ;; Text drawing functions
 (define draw-text 
   (foreign-lambda*
@@ -476,6 +485,67 @@ void FromVector3(float * x, Vector3 v) { x[0]=v.x; x[1]=v.y; x[2]=v.z; }
   (foreign-lambda* void ((Font* font)) "UnloadFont(*font);"))
 
 (define font-valid? (foreign-lambda* bool ((Font* font)) "C_return(IsFontValid(*font));"))
+
+
+;; Basic geometric 3D shapes drawing functions
+
+(define draw-line-3d
+  (foreign-lambda* void ((Vector3 startPos) (Vector3 endPos) (Color color))
+    "DrawLine3D(ToVector3(startPos), ToVector3(endPos), ToColor(color));"))
+(define draw-point-3d
+  (foreign-lambda* void ((Vector3 position) (Color color))
+    "DrawPoint3D(ToVector3(position), ToColor(color));"))
+(define draw-circle-3d
+  (foreign-lambda* void ((Vector3 center) (float radius) (Vector3 rotationAxis) (float rotationAngle) (Color color))
+    "DrawCircle3D(ToVector3(center), radius, ToVector3(rotationAxis), rotationAngle, ToColor(color));"))
+(define draw-triangle-3d
+  (foreign-lambda* void ((Vector3 v1) (Vector3 v2) (Vector3 v3) (Color color))
+    "DrawTriangle3D(ToVector3(v1), ToVector3(v2), ToVector3(v3), ToColor(color));"))
+;; (define draw-triangle-strip-3d)
+(define draw-cube
+  (foreign-lambda* void ((Vector3 position) (float width) (float height) (float length) (Color color))
+    "DrawCube(ToVector3(position), width, height, length, ToColor(color));"))
+(define draw-cube-v
+  (foreign-lambda* void ((Vector3 position) (Vector3 size) (Color color))
+    "DrawCubeV(ToVector3(position), ToVector3(size), ToColor(color));"))
+(define draw-cube-wires
+  (foreign-lambda* void ((Vector3 position) (float width) (float height) (float length) (Color color))
+    "DrawCubeWires(ToVector3(position), width, height, length, ToColor(color));"))
+(define draw-cube-wires-v
+  (foreign-lambda* void ((Vector3 position) (Vector3 size) (Color color))
+    "DrawCubeWiresV(ToVector3(position), ToVector3(size), ToColor(color));"))
+(define draw-sphere
+  (foreign-lambda* void ((Vector3 centerPos) (float radius) (Color color))
+    "DrawSphere(ToVector3(centerPos), radius, ToColor(color));"))
+(define draw-sphere-ex
+  (foreign-lambda* void ((Vector3 centerPos) (float radius) (int rings) (int slices) (Color color))
+    "DrawSphereEx(ToVector3(centerPos), radius, rings, slices, ToColor(color));"))
+(define draw-sphere-wires
+  (foreign-lambda* void ((Vector3 centerPos) (float radius) (int rings) (int slices) (Color color))
+    "DrawSphereWires(ToVector3(centerPos), radius, rings, slices, ToColor(color));"))
+(define draw-cylinder
+  (foreign-lambda* void ((Vector3 position) (float radiusTop) (float radiusBottom) (float height) (int slices) (Color color))
+    "DrawCylinder(ToVector3(position), radiusTop, radiusBottom, height, slices, ToColor(color));"))
+(define draw-cylinder-ex
+  (foreign-lambda* void ((Vector3 startPos) (Vector3 endPos) (float startRadius) (float endRadius) (float height) (int sides) (Color color))
+    "DrawCylinderEx(ToVector3(startPos), ToVector3(endPos), startRadius, endRadius, sides, ToColor(color));"))
+(define draw-cylinder-wires
+  (foreign-lambda* void ((Vector3 position) (float radiusTop) (float radiusBottom) (float height) (int slices) (Color color))
+    "DrawCylinderWires(ToVector3(position), radiusTop, radiusBottom, height, slices, ToColor(color));"))
+(define draw-cylinder-wires-ex
+  (foreign-lambda* void ((Vector3 startPos) (Vector3 endPos) (float startRadius) (float endRadius) (float height) (int sides) (Color color))
+    "DrawCylinderWiresEx(ToVector3(startPos), ToVector3(endPos), startRadius, endRadius, sides, ToColor(color));"))
+(define draw-capsule
+  (foreign-lambda* void ((Vector3 startPos) (Vector3 endPos) (float radius) (int slices) (int rings) (Color color))
+    "DrawCapsule(ToVector3(startPos), ToVector3(endPos), radius, slices, rings, ToColor(color));"))
+(define draw-capsule-wires
+  (foreign-lambda* void ((Vector3 startPos) (Vector3 endPos) (float radius) (int slices) (int rings) (Color color))
+    "DrawCapsuleWires(ToVector3(startPos), ToVector3(endPos), radius, slices, rings, ToColor(color));"))
+(define draw-plane
+  (foreign-lambda* void ((Vector3 centerPos) (Vector2 size) (Color color))
+    "DrawPlane(ToVector3(centerPos), ToVector2(size), ToColor(color));"))
+;; (define draw-ray)
+(define draw-grid (foreign-lambda void "DrawGrid" int float))
 
 
 					       
