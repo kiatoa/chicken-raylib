@@ -8,13 +8,15 @@
 
 (foreign-declare "#include <raylib.h>")
 
-(foreign-declare
- "Color ToColor (unsigned char *x) { return (Color) {x[0], x[1], x[2], x[3]}; }
-  Rectangle ToRectangle (float *x) { return (Rectangle) {x[0], x[1], x[2], x[3]}; }
-  Vector2 ToVector2 (float *x) { return (Vector2) {x[0], x[1]}; }
-  void FromVector2 (float *x, Vector2 v) { x[0]=v.x; x[1]=v.y; }
-  Vector3 ToVector3 (float *x) { return (Vector3) {x[0], x[1], x[2]}; }
-  void FromVector3 (float *x, Vector3 v) { x[0]=v.x; x[1]=v.y; x[2]=v.z; }")
+#>
+Color ToColor(unsigned char * x) { return (Color) {x[0], x[1], x[2], x[3]}; }
+Rectangle ToRectangle(float * x) { return (Rectangle) {x[0], x[1], x[2], x[3]}; }
+Rectangle FromRectangle(float * x, Rectangle r) { x[0]=r.x; x[1]=r.y; x[2]=r.width; x[3]=r.height; }
+Vector2 ToVector2(float * x) { return (Vector2) {x[0], x[1]}; }
+void FromVector2(float * x, Vector2 v) { x[0]=v.x; x[1]=v.y; }
+Vector3 ToVector3(float * x) { return (Vector3) {x[0], x[1], x[2]}; }
+void FromVector3(float * x, Vector3 v) { x[0]=v.x; x[1]=v.y; x[2]=v.z; }
+<#
 
 (define-foreign-type Color u8vector)
 (define (make-color r g b a)
@@ -101,6 +103,51 @@
   (let ([out (make-vec3 0 0 0)])
     (camera3d-position-helper out camera)
     out))
+
+;; (define-foreign-record-type (Image* "struct Image")
+;;   (constructor: make-image)
+;;   (destructor: free-image)
+;;   (void data image-data)
+;;   (int width image-width)
+;;   (int height image-height)
+;;   (int mipmaps image-mipmaps)
+;;   (int format image-format))
+
+;; (define-foreign-record-type (GlyphInfo* "struct GlyphInfo")
+;;   (constructor: make-glyphinfo)
+;;   (destructor: free-glyphinfo)
+;;   (int value glyphinfo-value)
+;;   (int offsetX glyphinfo-offset-x)
+;;   (int offsetY glyphinfo-offset-y)
+;;   (int advanceX glyphinfo-advance-x)
+;;   (Image* image glyphinfo-image))
+
+(define-foreign-record-type (Font* "struct Font")
+  (constructor: make-font)
+  (destructor: free-font)
+  (int baseSize font-base-size)
+  (int glyphCount font-glyph-count)
+  (int glyphPadding font-glyph-padding)
+  ;(Texture* texture font-texture) ;; Texture2d
+  ;(Rectangle* recs font-recs)
+  ;(GlyphInfo* glyphs font-glyphs)
+  )
+
+;; Functions for reading more complex font info
+(define font-texture
+  (foreign-lambda* void ((Texture* out) (Font* font)) "*out = font->texture;"))
+(define font-rec-helper
+  (foreign-lambda* void ((Rectangle out) (Font* font) (int i)) "FromRectangle(out, font->recs[i]);"))
+(define (font-rec font i)
+  (let ([out (make-rect 0 0 0 0)]) (font-rec-helper out font i) out))
+(define font-glyph-value
+  (foreign-lambda* int ((Font* font) (int i)) "C_return(font->glyphs[i].value);"))
+(define font-glyph-offset-x
+  (foreign-lambda* int ((Font* font) (int i)) "C_return(font->glyphs[i].offsetX);"))
+(define font-glyph-offset-y
+  (foreign-lambda* int ((Font* font) (int i)) "C_return(font->glyphs[i].offsetY);"))
+(define font-glyph-advance-x
+  (foreign-lambda* int ((Font* font) (int i)) "C_return(font->glyphs[i].advanceX);"))
 
 
 (define LIGHTGRAY  (make-color 200 200 200 255))
@@ -392,12 +439,46 @@
 
 ;; Text drawing functions
 (define draw-text 
-  (foreign-lambda* 
-    void ((c-string text) (int posX) (int posY) (int fontSize) (Color c)) 
+  (foreign-lambda*
+    void ((c-string text) (int posX) (int posY) (int fontSize) (Color c))
     "DrawText(text, posX, posY, fontSize, ToColor(c));"))
+(define draw-text-ex 
+  (foreign-lambda*
+    void ((Font* font) (c-string text) (Vector2 position) (float fontSize) (float spacing) (Color tint))
+    "DrawTextEx(*font, text, ToVector2(position), fontSize, spacing, ToColor(tint));"))
+(define draw-text-pro 
+  (foreign-lambda*
+    void ((Font* font) (c-string text) (Vector2 position) (Vector2 origin) (float rotation) (float fontSize) (float spacing) (Color c))
+    "DrawTextPro(*font, text, ToVector2(position), ToVector2(origin), rotation, fontSize, spacing, ToColor(c));"))
 
+(define set-text-line-spacing (foreign-lambda void "SetTextLineSpacing" int))
 (define measure-text (foreign-lambda int "MeasureText" c-string int))
 
+(define measure-text-ex-helper
+  (foreign-lambda* void ((Vector2 out) (Font* font) (c-string text) (float fontSize) (float spacing))
+    "FromVector2(out, MeasureTextEx(*font, text, fontSize, spacing));"))
+(define (measure-text-ex font text fontSize spacing)
+  (let ([out (make-vec2 0 0)]) (measure-text-ex-helper out font text fontSize spacing) out))
+
+(define load-font-ex-helper
+  (foreign-lambda* void ((Font* font) (c-string fileName) (int fontSize) (s32vector codepoints) (int codepointCount)) 
+    "*font = LoadFontEx(fileName, fontSize, codepoints, codepointCount);"))
+(define (load-font-ex filename fontSize codepoints codepointCount)
+  (let ([out (make-font)]) (load-font-ex-helper out filename fontSize codepoints codepointCount) out))
+
+(define load-font-helper
+  (foreign-lambda* void ((Font* font) (c-string fileName)) 
+    "*font = LoadFont(fileName);"))
+(define (load-font filename)
+  (let ([out (make-font)]) (load-font-helper out filename) out))
+
+(define unload-font
+  (foreign-lambda* void ((Font* font)) "UnloadFont(*font);"))
+
+(define font-valid? (foreign-lambda* bool ((Font* font)) "C_return(IsFontValid(*font));"))
+
+
+					       
 ;; Scheme wrappers not present in original API
 
 (define-syntax %define-wrappers
