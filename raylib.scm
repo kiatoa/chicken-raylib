@@ -18,6 +18,27 @@ Vector3 ToVector3(float * x) { return (Vector3) {x[0], x[1], x[2]}; }
 void FromVector3(float * x, Vector3 v) { x[0]=v.x; x[1]=v.y; x[2]=v.z; }
 <#
 
+;; Misc. functions
+(define FLAG_VSYNC_HINT         #x00000040) ;; Set to try enabling V-Sync on GPU
+(define FLAG_FULLSCREEN_MODE    #x00000002) ;; Set to run program in fullscreen
+(define FLAG_WINDOW_RESIZABLE   #x00000004) ;; Set to allow resizable window
+(define FLAG_WINDOW_UNDECORATED #x00000008) ;; Set to disable window decoration (frame and buttons)
+(define FLAG_WINDOW_HIDDEN      #x00000080) ;; Set to hide window
+(define FLAG_WINDOW_MINIMIZED   #x00000200) ;; Set to minimize window (iconify)
+(define FLAG_WINDOW_MAXIMIZED   #x00000400) ;; Set to maximize window (expanded to monitor)
+(define FLAG_WINDOW_UNFOCUSED   #x00000800) ;; Set to window non focused
+(define FLAG_WINDOW_TOPMOST     #x00001000) ;; Set to window always on top
+(define FLAG_WINDOW_ALWAYS_RUN  #x00000100) ;; Set to allow windows running while minimized
+(define FLAG_WINDOW_TRANSPARENT #x00000010) ;; Set to allow transparent framebuffer
+(define FLAG_WINDOW_HIGHDPI     #x00002000) ;; Set to support HighDPI
+(define FLAG_WINDOW_MOUSE_PASSTHROUGH #x00004000) ;; Set to support mouse passthrough, only supported when FLAG_WINDOW_UNDECORATED
+(define FLAG_BORDERLESS_WINDOWED_MODE #x00008000) ;; Set to run program in borderless windowed mode
+(define FLAG_MSAA_4X_HINT       #x00000020) ;; Set to try enabling MSAA 4X
+(define FLAG_INTERLACED_HINT    #x00010000) ;; Set to try enabling interlaced video format (for V3D)
+
+(define set-config-flags
+  (foreign-lambda* void ((int flags)) "SetConfigFlags(flags);"))
+
 (define-foreign-type Color u8vector)
 (define (make-color r g b a)
   (u8vector r g b a))
